@@ -1,3 +1,4 @@
+# load_dimension.py
 from airflow.hooks.postgres_hook import PostgresHook
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
@@ -9,8 +10,8 @@ class LoadDimensionOperator(BaseOperator):
     def __init__(self,
                  redshift_conn_id="",
                  table="",
-                 sql_query="",
-                 mode="append", # Mode can be 'append' or 'truncate'
+                 sql_query="",  
+                 mode="append",
                  *args, **kwargs):
 
         super(LoadDimensionOperator, self).__init__(*args, **kwargs)
@@ -20,19 +21,14 @@ class LoadDimensionOperator(BaseOperator):
         self.mode = mode
 
     def execute(self, context):
-        # Connect to Redshift
         redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
 
-        # Check if mode is 'truncate' to clear the table before loading
         if self.mode == "truncate":
-            self.log.info(f"Mode is 'truncate'. Clearing data from dimension table '{self.table}'...")
+            self.log.info(f"Clearing data from dimension table {self.table}")
             redshift.run(f"TRUNCATE TABLE {self.table}")
 
-        self.log.info(f"Loading dimension table '{self.table}'")
-
-        # Execute the INSERT statement
-        insert_statement = f"INSERT INTO {self.table} {self.sql_query}"
-        redshift.run(insert_statement)
-
-        self.log.info(f"Success: Dimension table '{self.table}' loaded.")
-
+        self.log.info(f"Loading dimension table {self.table}")
+        
+         
+        formatted_sql = f"INSERT INTO {self.table} {self.sql_query}"
+        redshift.run(formatted_sql)
